@@ -17,4 +17,38 @@ const allMovies = async (req: Request, res: Response) => {
   }
 };
 
-export { allMovies };
+const addMovie = async (req: Request, res: Response): Promise<void> => {
+  const { title, description, director, releaseYear, genre, rating } = req.body;
+
+  if (!title || !description || !director || !releaseYear) {
+    res.status(400).json({
+      status: "failed",
+      message: "All fields are required",
+    });
+    return;
+  }
+  try {
+    const newMovie = await Movie.create({
+      title,
+      description,
+      director,
+      releaseYear,
+      genre,
+      rating,
+    });
+
+    res.status(201).json({
+      status: "success",
+      message: "movie added successfully",
+      data: newMovie,
+    });
+  } catch (error) {
+    console.log("error to add movie", error);
+    res.status(500).json({
+      status: "failed",
+      message: "failed to add movie",
+    });
+  }
+};
+
+export { allMovies, addMovie };
