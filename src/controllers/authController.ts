@@ -12,7 +12,7 @@ const signup = async (req: Request, res: Response): Promise<void> => {
   if (!validate.success) {
     res.status(400).json({
       status: "failed",
-      message: validate.error.message,
+      message: validate.error?.issues[0]?.message || "Validation failed",
     });
     return;
   }
@@ -30,18 +30,19 @@ const signup = async (req: Request, res: Response): Promise<void> => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = await User.create({
-      username,
-      email,
-      password: hashedPassword,
-    });
+    const newUser = await User.create(
+      {
+        username,
+        email,
+        password: hashedPassword,
+      },
+    );
 
     res.status(201).json({
       status: "success",
       message: "user created successfully",
       data: newUser,
     });
-
   } catch (error) {
     console.log("error to signup", error);
     res.status(500).json({
@@ -50,6 +51,5 @@ const signup = async (req: Request, res: Response): Promise<void> => {
     });
   }
 };
-
 
 export { signup };
