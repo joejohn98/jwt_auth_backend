@@ -15,7 +15,8 @@ const protect = (req: Request, res: Response, next: NextFunction) => {
 
   try {
     const token = authHeader.split(" ")[1];
-    verifyToken(token as string);
+    const user = verifyToken(token as string);
+    (req as any).user = user;
     next();
   } catch (error) {
     console.log("error to protect", error);

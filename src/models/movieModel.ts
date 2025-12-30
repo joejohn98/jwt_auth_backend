@@ -24,6 +24,10 @@ const movieSchema = new mongoose.Schema(
       type: Number,
       required: [true, "Please provide a rating"],
     },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
   {
     timestamps: true,

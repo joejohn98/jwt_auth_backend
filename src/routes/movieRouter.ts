@@ -9,7 +9,7 @@ import protect from "../middlewares/auth";
 
 const router = express.Router();
 
-router.get("/", allMovies);
+router.get("/", protect, allMovies);
 
 router.post("/", protect, addMovie);
 

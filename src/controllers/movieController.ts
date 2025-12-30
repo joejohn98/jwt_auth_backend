@@ -2,15 +2,18 @@ import mongoose from "mongoose";
 import { Request, Response } from "express";
 
 import Movie from "../models/movieModel";
-import { create } from "node:domain";
 import {
   createMovieSchema,
   updateMovieSchema,
 } from "../validators/movie.schema";
 
 const allMovies = async (req: Request, res: Response) => {
+  const userId = (req as any).user.id;
+
   try {
-    const movies = await Movie.find().select("-__v").sort("-createdAt");
+    const movies = await Movie.find({ userId: userId })
+      .select("-__v")
+      .sort("-createdAt");
     res
       .status(200)
       .json({ status: "success", results: movies.length, data: movies });
@@ -23,14 +26,11 @@ const allMovies = async (req: Request, res: Response) => {
 };
 
 const addMovie = async (req: Request, res: Response): Promise<void> => {
+  const userId = (req as any).user.id;
+
   const { title, description, director, releaseYear, genre, rating } = req.body;
 
-  const validate = createMovieSchema.safeParse({
-    title,
-    description,
-    director,
-    releaseYear,
-  });
+  const validate = createMovieSchema.safeParse(req.body);
 
   if (!validate.success) {
     res.status(400).json({
@@ -47,7 +47,8 @@ const addMovie = async (req: Request, res: Response): Promise<void> => {
       releaseYear,
       genre,
       rating,
-    });
+      userId: userId,
+    } as any);
 
     res.status(201).json({
       status: "success",
@@ -64,6 +65,7 @@ const addMovie = async (req: Request, res: Response): Promise<void> => {
 };
 
 const updateMovie = async (req: Request, res: Response): Promise<void> => {
+  const userId = (req as any).user.id;
   const { id } = req.params;
 
   if (!id || !mongoose.Types.ObjectId.isValid(id)) {
@@ -81,13 +83,23 @@ const updateMovie = async (req: Request, res: Response): Promise<void> => {
       status: "failed",
       message: validate.error?.issues[0]?.message || "Validation failed",
     });
+    return;
   }
 
   try {
-    const updatedMovie = await Movie.findByIdAndUpdate(id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const updatedMovie = await Movie.findOneAndUpdate(
+      { _id: id, userId },
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!updatedMovie) {
+      res.status(404).json({ status: "failed", message: "movie not found" });
+      return;
+    }
 
     res.status(200).json({
       status: "success",
@@ -104,6 +116,7 @@ const updateMovie = async (req: Request, res: Response): Promise<void> => {
 };
 
 const deleteMovie = async (req: Request, res: Response): Promise<void> => {
+  const userId = (req as any).user.id;
   const { id } = req.params;
 
   if (!id || !mongoose.Types.ObjectId.isValid(id)) {
@@ -114,12 +127,13 @@ const deleteMovie = async (req: Request, res: Response): Promise<void> => {
     return;
   }
   try {
-    const deltedMovie = await Movie.findByIdAndDelete(id);
+    const deltedMovie = await Movie.findOneAndDelete({ _id: id, userId });
     if (!deltedMovie) {
       res.status(404).json({
         status: "failed",
         message: "movie not found",
       });
+      return;
     }
     res.status(200).json({
       status: "success",
