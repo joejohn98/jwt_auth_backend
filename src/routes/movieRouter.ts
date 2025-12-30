@@ -13,4 +13,6 @@ router.post("/", addMovie);
 
 router.put("/:id", updateMovie);
 
+router.delete("/:id", updateMovie);
+
 export default router;

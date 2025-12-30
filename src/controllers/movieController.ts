@@ -51,7 +51,7 @@ const addMovie = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-const updateMovie = async (req: Request, res: Response) => {
+const updateMovie = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
   if (!id || !mongoose.Types.ObjectId.isValid(id)) {
@@ -66,7 +66,7 @@ const updateMovie = async (req: Request, res: Response) => {
       new: true,
       runValidators: true,
     });
-    
+
     res.status(200).json({
       status: "success",
       message: "movie updated successfully",
@@ -81,4 +81,35 @@ const updateMovie = async (req: Request, res: Response) => {
   }
 };
 
-export { allMovies, addMovie, updateMovie };
+const deleteMovie = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    res.status(400).json({
+      status: "failed",
+      message: "Invalid movie id",
+    });
+    return;
+  }
+  try {
+    const deltedMovie = await Movie.findByIdAndDelete(id);
+    if (!deltedMovie) {
+      res.status(404).json({
+        status: "failed",
+        message: "movie not found",
+      });
+    }
+    res.status(200).json({
+      status: "success",
+      message: "movie deleted successfully",
+    });
+  } catch (error) {
+    console.log("error to delete movie", error);
+    res.status(500).json({
+      status: "failed",
+      message: "failed to delete movie",
+    });
+  }
+};
+
+export { allMovies, addMovie, updateMovie, deleteMovie };
