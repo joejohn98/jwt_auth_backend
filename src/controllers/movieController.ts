@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 import { Request, Response } from "express";
 
 import Movie from "../models/movieModel";
+import { create } from "node:domain";
+import {
+  createMovieSchema,
+  updateMovieSchema,
+} from "../validators/movie.schema";
 
 const allMovies = async (req: Request, res: Response) => {
   try {
@@ -20,10 +25,17 @@ const allMovies = async (req: Request, res: Response) => {
 const addMovie = async (req: Request, res: Response): Promise<void> => {
   const { title, description, director, releaseYear, genre, rating } = req.body;
 
-  if (!title || !description || !director || !releaseYear) {
+  const validate = createMovieSchema.safeParse({
+    title,
+    description,
+    director,
+    releaseYear,
+  });
+
+  if (!validate.success) {
     res.status(400).json({
       status: "failed",
-      message: "All fields are required",
+      message: validate.error?.issues[0]?.message || "Validation failed",
     });
     return;
   }
@@ -61,6 +73,16 @@ const updateMovie = async (req: Request, res: Response): Promise<void> => {
     });
     return;
   }
+
+  const validate = updateMovieSchema.safeParse(req.body);
+
+  if (!validate.success) {
+    res.status(400).json({
+      status: "failed",
+      message: validate.error?.issues[0]?.message || "Validation failed",
+    });
+  }
+
   try {
     const updatedMovie = await Movie.findByIdAndUpdate(id, req.body, {
       new: true,

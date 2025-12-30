@@ -2,17 +2,19 @@ import express from "express";
 import {
   addMovie,
   allMovies,
+  deleteMovie,
   updateMovie,
 } from "../controllers/movieController";
+import protect from "../middlewares/auth";
 
 const router = express.Router();
 
 router.get("/", allMovies);
 
-router.post("/", addMovie);
+router.post("/", protect, addMovie);
 
-router.put("/:id", updateMovie);
+router.put("/:id", protect, updateMovie);
 
-router.delete("/:id", updateMovie);
+router.delete("/:id", protect, deleteMovie);
 
 export default router;
