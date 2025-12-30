@@ -51,4 +51,34 @@ const addMovie = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-export { allMovies, addMovie };
+const updateMovie = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    res.status(400).json({
+      status: "failed",
+      message: "Invalid movie id",
+    });
+    return;
+  }
+  try {
+    const updatedMovie = await Movie.findByIdAndUpdate(id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    
+    res.status(200).json({
+      status: "success",
+      message: "movie updated successfully",
+      data: updatedMovie,
+    });
+  } catch (error) {
+    console.log("error to update movie", error);
+    res.status(500).json({
+      status: "failed",
+      message: "failed to update movie",
+    });
+  }
+};
+
+export { allMovies, addMovie, updateMovie };
