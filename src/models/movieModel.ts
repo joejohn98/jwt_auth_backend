@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { title } from "node:process";
 
 const movieSchema = new mongoose.Schema(
   {
